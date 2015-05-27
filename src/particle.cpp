@@ -24,8 +24,6 @@ sample_particle::sample_particle()
 // open file
 void sample_particle::open_file()
 {
-  // if filename not set exit
-//  fp *file_stream = open(sample_file);
   filestream.open(sample_file.c_str(), std::ifstream::in); 
   return;
 }
