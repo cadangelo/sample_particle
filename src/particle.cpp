@@ -6,14 +6,13 @@
 #include <string>
 
 // constructor
-sample_particle::sample_particle(std::string filename)
+sample_particle::sample_particle(std::string filename, int size)
 {
   set_filename(filename);
 
   open_file();
   
-  //read_file(filename);
-  
+  set_batch_size(size); 
 }
 
 // default constructor
@@ -34,6 +33,18 @@ void sample_particle::set_filename(std::string filename)
   sample_file = filename;
 }
 
+// get filename
+std::string sample_particle::get_filename()
+{
+  return sample_file; 
+}
+
+// set batch size
+void sample_particle::set_batch_size(int size)
+{
+  batch_size = size;
+}
+
 // destructor
 sample_particle::~sample_particle()
 {
@@ -47,67 +58,47 @@ void sample_particle::print_filename()
   return;
 }
 
-//read file
+//read file and push events to stack
 int sample_particle::read_file(int batch_size)
 {
   int error_code = 0;
   int i;
   std::string line, str;
   const char* delimiters = " "; 
-//  event new_event;
   
   if (filestream.is_open())
-    {
+    { 
+      // read in batch size of file line by line 
       for (i=0; i<batch_size; i++)
         {
-          std::cout << "i= " << i << std::endl;
-          std::getline (filestream,line);   
+          std::getline (filestream,line);  
+          
+          // if the eof hasn't been reached, create new event
+          // and push to stack
           if ( !filestream.eof() )
             {
-             std::cout << "eof? " << filestream.eof() << std::endl; 
-             //std::getline (std::cin, str);
-             //if (!std::cin.eof())
-              // std::cout << "failure" << std::endl;
-   
-             std::cout << "got line" << std::endl;         
-             event new_event;
-              std::vector<std::string> tokens;
-              tokenize(line,tokens,delimiters);
-             std::cout << "tokenized line" << std::endl;      
-             std::cout << "line " << line <<  std::endl;      
-//             std::cout << "token 0 " << std::stof(tokens[0]) << std::endl;      
-               
-              new_event.x = std::stof(tokens[0]);
-              new_event.y = std::stof(tokens[1]);
-              new_event.z = std::stof(tokens[2]);
-              new_event.u = std::stof(tokens[3]);
-              new_event.v = std::stof(tokens[4]);
-              new_event.w = std::stof(tokens[5]);
-              new_event.name = tokens[6];
-              new_event.erg = std::stof(tokens[7]);
-              new_event.wgt = std::stof(tokens[8]);
-              
-             std::cout << "event wgt" << new_event.wgt << std::endl;         
-              list.push(new_event);
-             std::cout << "pushed" << std::endl;         
+              event new_event;
+
+              new_event = create_event(line);
+                
+              push_next_event(new_event);
             }
+ 
+          // if eof is reached, throw error and close filestream
           else
             {
               error_code = 1;
               std::cout << " eof reached " << std::endl;
               filestream.close();
             }
-           // filestream.close();
          }
    
-          //  filestream.close();
-
    }
 
-        //   filestream.close();
   return error_code;
 }
 
+// Split string into pieces based on delimiter
 void sample_particle::tokenize( const std::string& str,
                                 std::vector<std::string>& tokens,
                                 const char* delimiters)
@@ -135,6 +126,28 @@ void sample_particle::tokenize( const std::string& str,
 
 }
 
+// Call tokenize to split line, then create particle event 
+//  with appropriate attributes
+event sample_particle::create_event( std::string line )
+{
+  event new_event;  // event to be created
+  std::vector<std::string> tokens; // pieces of line
+  
+  tokenize(line,tokens,delimiters);
+             
+  new_event.x = std::stof(tokens[0]);
+  new_event.y = std::stof(tokens[1]);
+  new_event.z = std::stof(tokens[2]);
+  new_event.u = std::stof(tokens[3]);
+  new_event.v = std::stof(tokens[4]);
+  new_event.w = std::stof(tokens[5]);
+  new_event.name = tokens[6];
+  new_event.erg = std::stof(tokens[7]);
+  new_event.wgt = std::stof(tokens[8]);
+
+  return new_event;
+}
+
 int sample_particle::pop_next_event(event& next_event)
 {
 
@@ -142,31 +155,38 @@ int sample_particle::pop_next_event(event& next_event)
    int ec; // error code from read file
    int batch_size = 6;
 
+   // if the stack is empty read another batch from the file
+   // will return error if file is empty
    if ( list.empty() )
      {
-       std::cout << "reading file" << std::endl;
        ec = read_file(batch_size);
-       std::cout << "read file ec in pop next" << ec << std::endl;
      }
 
+   // if the stack is NOT empty, pop an event
    if ( !list.empty() )
      {
-       std::cout << "popping event" << std::endl;
-       std::cout << " from list size " << list.size() << std::endl;
        next_event = list.top();
        list.pop();
-       std::cout << next_event << std::endl;
      }
+ 
+   // throw an error if the stack is not empty but 
+   // can not pop an event
    else
      {
        error_code = 1;
      }
 
-   std::cout << "list empty EC " << error_code << std::endl;
    return error_code;
     
 
 }
+
+// push an event to the stack
+void sample_particle::push_next_event( event new_event )
+{
+  list.push(new_event);
+}
+
 
 std::ostream& operator<<(std::ostream& os, const event& this_event)
 {
