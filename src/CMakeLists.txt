@@ -14,13 +14,17 @@ SET ( SAMPLE_PARTICLE_INC
 
 ADD_LIBRARY( sample_particle SHARED ${SAMPLE_PARTICLE_SRC} )
 
+
 SET_TARGET_PROPERTIES(sample_particle
                       PROPERTIES    FRAMEWORK               TRUE
                                     PUBLIC_HEADER           "${SAMPLE_PARTICLE_INC}"
 )
+
 
 INSTALL( TARGETS sample_particle
 LIBRARY DESTINATION lib 
 ARCHIVE DESTINATION lib
 PUBLIC_HEADER DESTINATION include 
 )
+
+ADD_SUBDIRECTORY(test)

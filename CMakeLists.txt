@@ -6,6 +6,7 @@
 
 CMAKE_MINIMUM_REQUIRED( VERSION 2.8 )
 
+ENABLE_TESTING()
 PROJECT ( SAMPLE_PARTICLE )
 
 # Need C++ 11 for data initialization and stof
